@@ -420,9 +420,9 @@ If you use this project in your research, please cite:
 ```bibtex
 @software{multi_label_text_classifier,
   title={Multi-Label Text Classification Web Application},
-  author={Your Name},
+  author={Engin Aktaş},
   year={2024},
-  url={https://github.com/yourusername/multi-label-text-classifier}
+  url={https://github.com/enginakt/multi-label-text-classifier}
 }
 ```
 
@@ -431,9 +431,7 @@ If you use this project in your research, please cite:
 - [BERT: Pre-training of Deep Bidirectional Transformers](https://arxiv.org/abs/1810.04805)
 - [Classifier Chains for Multi-label Classification](https://link.springer.com/chapter/10.1007/978-3-642-04174-7_17)
 
-## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 📞 Contact & Support
 
@@ -453,3 +451,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **⚠️ Note**: This application is developed for educational and research purposes. For production use, additional security testing and optimization are recommended.
 
 **🌟 Star this repository** if you find it useful!
+
