@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}Ana Sayfa - Çok Etiketli Metin Sınıflandırma{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Hero Section -->
+    <div class="hero-section text-center mb-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h1 class="display-5 fw-bold text-primary mb-3">
+                    <i class="fas fa-robot me-3"></i>
+                    Akıllı Metin Sınıflandırıcı
+                </h1>
+                <p class="lead text-muted mb-4">
+                    Gelişmiş makine öğrenmesi algoritmaları ile metninizi otomatik olarak 
+                    kategorilere ayırın. {{ models|length }} farklı model ile {{ labels|length }} 
+                    kategori arasında sınıflandırma yapın.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Model Statistics -->
+    <div class="row mb-5">
+        <div class="col-md-3 col-6 mb-3">
+            <div class="stat-card text-center p-3 bg-light rounded">
+                <i class="fas fa-brain fa-2x text-primary mb-2"></i>
+                <h4 class="fw-bold">{{ models|length }}</h4>
+                <small class="text-muted">Eğitilmiş Model</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="stat-card text-center p-3 bg-light rounded">
+                <i class="fas fa-tags fa-2x text-success mb-2"></i>
+                <h4 class="fw-bold">{{ labels|length }}</h4>
+                <small class="text-muted">Kategori</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="stat-card text-center p-3 bg-light rounded">
+                <i class="fas fa-database fa-2x text-info mb-2"></i>
+                <h4 class="fw-bold">50K</h4>
+                <small class="text-muted">Eğitim Verisi</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="stat-card text-center p-3 bg-light rounded">
+                <i class="fas fa-tachometer-alt fa-2x text-warning mb-2"></i>
+                <h4 class="fw-bold">92%</h4>
+                <small class="text-muted">En İyi F1-Score</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Text Input Section -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        Metninizi Girin
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('predict_form') }}" method="POST" id="predictionForm">
+                        <div class="mb-3">
+                            <label for="text" class="form-label fw-semibold">
+                                Sınıflandırılacak Metin:
+                            </label>
+                            <textarea 
+                                class="form-control" 
+                                id="text" 
+                                name="text" 
+                                rows="8" 
+                                placeholder="Buraya metninizi yazın... (Örneğin: haber metni, makale, blog yazısı vb.)"
+                                maxlength="10000"
+                                required
+                            ></textarea>
+                            <div class="form-text">
+                                <span id="charCount">0</span> / 10,000 karakter
+                            </div>
+                        </div>
+
+                        <!-- Sample Texts -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Örnek Metinler:</label>
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm w-100 sample-text" 
+                                            data-text="Türkiye Merkez Bankası faiz oranlarını yükselterek enflasyonla mücadele etmeye devam ediyor. Ekonomistler bu kararın piyasalarda olumlu etki yaratacağını düşünüyor.">
+                                        <i class="fas fa-chart-line me-1"></i>Ekonomi Haberi
+                                    </button>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm w-100 sample-text"
+                                            data-text="Yeni teknoloji şirketi, yapay zeka destekli çözümleriyle endüstride devrim yaratmaya hazırlanıyor. Şirket, otomotiv sektöründe büyük yatırımlar planlıyor.">
+                                        <i class="fas fa-industry me-1"></i>İş & Endüstri
+                                    </button>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm w-100 sample-text"
+                                            data-text="Hükümet, sosyal yardım programlarını genişletme kararı aldı. Yeni düzenlemelerle daha fazla aileye destek sağlanacak.">
+                                        <i class="fas fa-users me-1"></i>Hükümet & Sosyal
+                                    </button>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm w-100 sample-text"
+                                            data-text="Borsa İstanbul'da işlem gören şirketlerin kar açıklamaları yatırımcılar tarafından yakından takip ediliyor. Piyasa uzmanları pozitif bir tablo çiziyor.">
+                                        <i class="fas fa-chart-bar me-1"></i>Pazarlar & Ticaret
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="button" class="btn btn-outline-secondary me-md-2" id="clearText">
+                                <i class="fas fa-eraser me-1"></i>Temizle
+                            </button>
+                            <button type="submit" class="btn btn-primary" id="predictBtn">
+                                <i class="fas fa-magic me-1"></i>
+                                Sınıflandır
+                                <span class="spinner-border spinner-border-sm ms-2 d-none" id="loadingSpinner"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Categories -->
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        Mevcut Kategoriler
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for label in labels %}
+                        <div class="col-md-6 col-lg-3 mb-2">
+                            <div class="category-badge p-2 rounded bg-light border">
+                                <i class="fas fa-tag text-primary me-2"></i>
+                                <small class="fw-semibold">{{ label }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Bir metin birden fazla kategoriye ait olabilir (çok etiketli sınıflandırma).
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Model Information -->
+    {% if model_info and model_info.performance %}
+    <div class="row justify-content-center mt-4">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        Model Performans Özeti
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Model</th>
+                                    <th>F1-Score</th>
+                                    <th>Doğruluk</th>
+                                    <th>Eğitim Süresi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for perf in model_info.performance[:3] %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ perf.model }}</strong>
+                                        {% if loop.index == 1 %}
+                                            <span class="badge bg-success ms-1">En İyi</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ "%.3f"|format(perf.f1_micro) }}</td>
+                                    <td>{{ "%.3f"|format(perf.accuracy) }}</td>
+                                    <td>{{ "%.1f"|format(perf.train_time) }}s</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- API Usage Modal -->
+<div class="modal fade" id="apiModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-code me-2"></i>API Kullanımı
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>POST /predict</h6>
+                <pre class="bg-light p-3 rounded"><code>{
+  "text": "Sınıflandırılacak metin buraya..."
+}</code></pre>
+                
+                <h6 class="mt-3">Yanıt:</h6>
+                <pre class="bg-light p-3 rounded"><code>{
+  "predictions": {
+    "OneVsRest Logistic Regression": {
+      "predicted_labels": ["Ekonomi & Finans"],
+      "label_details": [...],
+      "prediction_time": 15.2
+    },
+    "OneVsRest SVM": {
+      "predicted_labels": ["İş & Endüstri"],
+      "label_details": [...],
+      "prediction_time": 28.5
+    },
+    "BERT Fine-tuning": {
+      "predicted_labels": ["Ekonomi & Finans", "İş & Endüstri"],
+      "label_details": [...],
+      "prediction_time": 145.3
+    }
+  },
+  "summary": {...}
+}</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Karakter sayacı
+const textArea = document.getElementById('text');
+const charCount = document.getElementById('charCount');
+
+textArea.addEventListener('input', function() {
+    charCount.textContent = this.value.length;
+});
+
+// Örnek metinler
+document.querySelectorAll('.sample-text').forEach(button => {
+    button.addEventListener('click', function() {
+        textArea.value = this.dataset.text;
+        charCount.textContent = textArea.value.length;
+        textArea.focus();
+    });
+});
+
+// Temizle butonu
+document.getElementById('clearText').addEventListener('click', function() {
+    textArea.value = '';
+    charCount.textContent = '0';
+    textArea.focus();
+});
+
+// Form gönderimi
+document.getElementById('predictionForm').addEventListener('submit', function() {
+    const button = document.getElementById('predictBtn');
+    const spinner = document.getElementById('loadingSpinner');
+    
+    button.disabled = true;
+    spinner.classList.remove('d-none');
+    
+    setTimeout(() => {
+        if (button.disabled) {
+            button.disabled = false;
+            spinner.classList.add('d-none');
+        }
+    }, 30000); // 30 saniye timeout
+});
+</script>
+{% endblock %}

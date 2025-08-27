@@ -1,0 +1,434 @@
+{% extends "base.html" %}
+
+{% block title %}Sonuçlar - Çok Etiketli Metin Sınıflandırma{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Back Button -->
+    <div class="mb-3">
+        <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-1"></i>
+            Yeni Metin Sınıflandır
+        </a>
+    </div>
+
+    <!-- Input Text Display -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-file-text me-2"></i>
+                Girilen Metin
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Orijinal Metin:</h6>
+                    <div class="p-3 bg-light rounded">
+                        <small>{{ results.original_text }}</small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h6>İşlenmiş Metin:</h6>
+                    <div class="p-3 bg-light rounded">
+                        <small class="text-muted">{{ results.processed_text }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Section -->
+    {% if results.summary %}
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-chart-pie me-2"></i>
+                Özet Sonuçlar
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 text-center">
+                    <h4 class="text-success">{{ results.summary.successful_models }}</h4>
+                    <small class="text-muted">Başarılı Model</small>
+                </div>
+                <div class="col-md-3 text-center">
+                    <h4 class="text-info">{{ results.summary.total_models }}</h4>
+                    <small class="text-muted">Toplam Model</small>
+                </div>
+                <div class="col-md-6">
+                    <h6>Konsensüs Etiketler:</h6>
+                    {% if results.summary.consensus_labels %}
+                        {% for label in results.summary.consensus_labels %}
+                            <span class="badge bg-success me-1 mb-1">{{ label }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <span class="text-muted">Konsensüs yok</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if results.summary.most_predicted_labels %}
+            <div class="mt-3">
+                <h6>En Çok Tahmin Edilen Etiketler:</h6>
+                <div class="row">
+                    {% for label, count in results.summary.most_predicted_labels %}
+                    <div class="col-md-6 col-lg-4 mb-2">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-primary me-2">{{ count }}</span>
+                            <small>{{ label }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Model Results -->
+    <div class="row">
+        {% for model_name, result in results.predictions.items() %}
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="fas fa-robot me-2"></i>
+                        {{ model_name }}
+                    </h6>
+                    {% if 'prediction_time' in result %}
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            {{ result.prediction_time }}ms
+                        </small>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if 'error' in result %}
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Hata:</strong> {{ result.error }}
+                            {% if result.traceback %}
+                            <details class="mt-2">
+                                <summary class="btn btn-sm btn-outline-danger">Detaylı Hata Bilgisi</summary>
+                                <pre class="mt-2 p-2 bg-dark text-light rounded" style="font-size: 0.75rem; max-height: 200px; overflow-y: auto;">{{ result.traceback }}</pre>
+                            </details>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <!-- Predicted Labels -->
+                        <div class="mb-3">
+                            <h6>Tahmin Edilen Kategoriler:</h6>
+                            {% if result.predicted_labels %}
+                                {% for label in result.predicted_labels %}
+                                    <span class="badge bg-success me-1 mb-1">
+                                        <i class="fas fa-check me-1"></i>{{ label }}
+                                    </span>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-muted">Hiçbir kategori tahmin edilmedi</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Detailed Results -->
+                        <div class="mb-3">
+                            <h6>Detaylı Sonuçlar:</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Kategori</th>
+                                            <th>Tahmin</th>
+                                            <th>Olasılık</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for detail in result.label_details %}
+                                        <tr>
+                                            <td>{{ detail.label }}</td>
+                                            <td>
+                                                {% if detail.predicted %}
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check"></i>
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">
+                                                        <i class="fas fa-times"></i>
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if detail.probability is not none %}
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                                            <div class="progress-bar 
+                                                                {% if detail.probability > 0.7 %}bg-success
+                                                                {% elif detail.probability > 0.3 %}bg-warning
+                                                                {% else %}bg-danger{% endif %}" 
+                                                                style="width: {{ (detail.probability * 100)|round(1) }}%">
+                                                            </div>
+                                                        </div>
+                                                        <small>{{ (detail.probability * 100)|round(1) }}%</small>
+                                                    </div>
+                                                {% else %}
+                                                    <span class="text-muted">N/A</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Confidence Chart -->
+                        {% if result.label_details %}
+                        <div class="mb-2">
+                            <h6>Güven Skoru Grafiği:</h6>
+                            <div class="chart-container" style="position: relative; height: 250px; width: 100%;">
+                                <canvas id="chart_{{ loop.index }}"></canvas>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Model Comparison Chart -->
+    {% if results.predictions|length > 1 %}
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-chart-bar me-2"></i>
+                Model Karşılaştırması
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
+                <canvas id="comparisonChart"></canvas>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Export Options -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-download me-2"></i>
+                Sonuçları İndir
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-2">
+                    <button class="btn btn-outline-primary w-100" onclick="downloadJSON()">
+                        <i class="fas fa-file-code me-1"></i>
+                        JSON İndir
+                    </button>
+                </div>
+                <div class="col-md-4 mb-2">
+                    <button class="btn btn-outline-success w-100" onclick="downloadCSV()">
+                        <i class="fas fa-file-csv me-1"></i>
+                        CSV İndir
+                    </button>
+                </div>
+                <div class="col-md-4 mb-2">
+                    <button class="btn btn-outline-info w-100" onclick="copyToClipboard()">
+                        <i class="fas fa-copy me-1"></i>
+                        Panoya Kopyala
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden data for JavaScript -->
+<script id="results-data" type="application/json">{{ results|tojson }}</script>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Results data
+const resultsData = JSON.parse(document.getElementById('results-data').textContent);
+
+// Create individual charts for each model
+{% for model_name, result in results.predictions.items() %}
+    {% if 'label_details' in result and 'error' not in result %}
+    (function() {
+        const ctx = document.getElementById('chart_{{ loop.index }}').getContext('2d');
+        const labels = {{ result.label_details|map(attribute='label')|list|tojson }};
+        const probabilities = {{ result.label_details|map(attribute='probability')|list|tojson }};
+        
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Güven Skoru',
+                    data: probabilities,
+                    backgroundColor: probabilities.map(p => 
+                        p > 0.7 ? 'rgba(40, 167, 69, 0.8)' : 
+                        p > 0.3 ? 'rgba(255, 193, 7, 0.8)' : 
+                        'rgba(220, 53, 69, 0.8)'
+                    ),
+                    borderColor: probabilities.map(p => 
+                        p > 0.7 ? 'rgba(40, 167, 69, 1)' : 
+                        p > 0.3 ? 'rgba(255, 193, 7, 1)' : 
+                        'rgba(220, 53, 69, 1)'
+                    ),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 1,
+                        ticks: {
+                            callback: function(value) {
+                                return (value * 100).toFixed(0) + '%';
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 0
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                onResize: function(chart, size) {
+                    // Grafik yeniden boyutlandırıldığında sabit yükseklik koru
+                    chart.canvas.parentNode.style.height = '250px';
+                }
+            }
+        });
+    })();
+    {% endif %}
+{% endfor %}
+
+// Comparison chart
+{% if results.predictions|length > 1 %}
+(function() {
+    const ctx = document.getElementById('comparisonChart').getContext('2d');
+    const models = [];
+    const predictionCounts = [];
+    
+    {% for model_name, result in results.predictions.items() %}
+        {% if 'predicted_labels' in result and 'error' not in result %}
+            models.push('{{ model_name }}');
+            predictionCounts.push({{ result.predicted_labels|length }});
+        {% endif %}
+    {% endfor %}
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: models,
+            datasets: [{
+                label: 'Tahmin Edilen Kategori Sayısı',
+                data: predictionCounts,
+                backgroundColor: 'rgba(13, 110, 253, 0.8)',
+                borderColor: 'rgba(13, 110, 253, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            },
+            onResize: function(chart, size) {
+                // Grafik yeniden boyutlandırıldığında sabit yükseklik koru
+                chart.canvas.parentNode.style.height = '300px';
+            }
+        }
+    });
+})();
+{% endif %}
+
+// Download functions
+function downloadJSON() {
+    const dataStr = JSON.stringify(resultsData, null, 2);
+    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `classification_results_${new Date().getTime()}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+}
+
+function downloadCSV() {
+    let csvContent = "Model,Kategori,Tahmin,Olasılık\n";
+    
+    Object.entries(resultsData.predictions).forEach(([modelName, result]) => {
+        if (result.label_details) {
+            result.label_details.forEach(detail => {
+                csvContent += `"${modelName}","${detail.label}","${detail.predicted}","${detail.probability || 'N/A'}"\n`;
+            });
+        }
+    });
+    
+    const dataBlob = new Blob([csvContent], {type: 'text/csv'});
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `classification_results_${new Date().getTime()}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+}
+
+function copyToClipboard() {
+    let textContent = `Metin Sınıflandırma Sonuçları\n`;
+    textContent += `================================\n\n`;
+    textContent += `Orijinal Metin: ${resultsData.original_text}\n\n`;
+    
+    Object.entries(resultsData.predictions).forEach(([modelName, result]) => {
+        textContent += `${modelName}:\n`;
+        if (result.predicted_labels && result.predicted_labels.length > 0) {
+            textContent += `  Kategoriler: ${result.predicted_labels.join(', ')}\n`;
+        } else {
+            textContent += `  Kategoriler: Hiçbiri\n`;
+        }
+        textContent += '\n';
+    });
+    
+    navigator.clipboard.writeText(textContent).then(() => {
+        alert('Sonuçlar panoya kopyalandı!');
+    }).catch(err => {
+        console.error('Kopyalama hatası:', err);
+    });
+}
+</script>
+{% endblock %}
