@@ -437,7 +437,7 @@ If you use this project in your research, please cite:
 
 - **Issues**: [GitHub Issues](https://github.com/yourusername/multi-label-text-classifier/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/yourusername/multi-label-text-classifier/discussions)
-- **Email**: your.email@example.com
+- **Email**: enginakt21@gmail.com
 
 ## 🙏 Acknowledgments
 
@@ -451,4 +451,5 @@ If you use this project in your research, please cite:
 **⚠️ Note**: This application is developed for educational and research purposes. For production use, additional security testing and optimization are recommended.
 
 **🌟 Star this repository** if you find it useful!
+
 
